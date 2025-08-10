@@ -15,6 +15,10 @@ app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }))
 
+app.get("/", (req, res) => {
+  res.send("Welcome to the PDF AI Backend API 🚀");
+});
+
 // Routes here...
 app.use('/api/pdf',pdfRoutes)
 app.use('/api/chunks',chunkRoutes)
