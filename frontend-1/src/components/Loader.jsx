@@ -1,37 +1,21 @@
 import React, { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import api from '../services/api';
-import Spinner from './Spinner';
 
-// function Spinner() {
-//   return <span className="spinner" aria-label="Loading"></span>;
-// }
-
-// function BigLoader() {
-//   return (
-//     <div style={{
-//       textAlign: 'center',
-//       padding: '20px',
-//       fontWeight: 'bold',
-//       color: '#555'
-//     }}>
-//       Loading response...
-//     </div>
-//   );
-// }
-
-export default function ChatWindow({ pdfId, viewerRef }) {
+export default function ChatWindow({ pdfId, viewerRef, setPdfId }) {
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+
   const messagesEndRef = useRef(null);
 
+  // Fetch chat history when pdfId changes
   useEffect(() => {
     if (!pdfId) return;
     api.getChatHistory(pdfId).then((res) => setMessages(res.data));
   }, [pdfId]);
 
+  // Auto scroll to bottom when messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -41,29 +25,23 @@ export default function ChatWindow({ pdfId, viewerRef }) {
 
     try {
       setLoading(true);
-      setError(null)
-      const res = await api.askQuestion(question, pdfId,);
+      const res = await api.askQuestion(pdfId, question);
       setMessages(res.data.history);
       setQuestion('');
     } catch (err) {
-      console.error('Failed to get answer:', err);
-      setError('Failed to get answer from the server. Please try again later.');
+      console.error("Failed to get answer:", err);
+      // Optionally show error UI here
     } finally {
       setLoading(false);
     }
   };
 
-  // ... formatAnswer same as before ...
-
+  // Format answer text to render markdown and clickable page citations
   const formatAnswer = (text) => {
     if (!text) return null;
 
-    const cleanedText = text
-      .split('\n')
-      .filter(line => !(line.trim() === '' || line.match(/^\d+\.$/)))
-      .join('\n');
+    const parts = text.split(/(\(p\.\d+\))/g);
 
-    const parts = cleanedText.split(/(\(p\.\d+\))/g); // split and keep citations
     return parts.map((part, idx) => {
       const match = part.match(/\(p\.(\d+)\)/);
       if (match) {
@@ -88,26 +66,18 @@ export default function ChatWindow({ pdfId, viewerRef }) {
       className="d-flex flex-column bg-light"
       style={{ height: '500px', borderRadius: '8px', border: '1px solid #ccc' }}
     >
-      <div className="flex-grow-1 p-3 overflow-auto" style={{ borderBottom: '1px solid #ddd' }}>
-        {loading ? (
-          <Spinner />
-        ) : (
-          messages.map((msg, idx) => (
-            <div key={idx} className="mb-3">
-              <div className="fw-bold">Q: {msg.question}</div>
-              <div>A: {formatAnswer(msg.answer)}</div>
-            </div>
-          ))
-        )}
+      <div
+        className="flex-grow-1 p-3 overflow-auto"
+        style={{ borderBottom: '1px solid #ddd' }}
+      >
+        {messages.map((msg, idx) => (
+          <div key={idx} className="mb-3">
+            <div className="fw-bold">Q: {msg.question}</div>
+            <div>A: {formatAnswer(msg.answer)}</div>
+          </div>
+        ))}
         <div ref={messagesEndRef} />
       </div>
-
-      {error && (
-        <div className="alert alert-danger" role="alert">
-          {error}
-        </div>
-      )}
-
 
       <div className="p-3 bg-white">
         <div className="input-group">
@@ -116,7 +86,7 @@ export default function ChatWindow({ pdfId, viewerRef }) {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             className="form-control"
-            placeholder={loading ? 'Waiting for answer...' : 'Ask a question...'}
+            placeholder={loading ? "Waiting for answer..." : "Ask a question..."}
             onKeyDown={(e) => e.key === 'Enter' && !loading && handleAsk()}
             disabled={loading}
           />
@@ -125,7 +95,15 @@ export default function ChatWindow({ pdfId, viewerRef }) {
             className="btn btn-primary"
             disabled={loading}
           >
-            {loading ? <Spinner /> : 'Send'}
+            {loading ? (
+              <span
+                className="spinner-border spinner-border-sm"
+                role="status"
+                aria-hidden="true"
+              ></span>
+            ) : (
+              "Send"
+            )}
           </button>
         </div>
       </div>

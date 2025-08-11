@@ -42,7 +42,7 @@
 }
 
 /* Spinner styles */
-/* .spinner {
+.spinner {
   display: inline-block;
   width: 18px;
   height: 18px;
@@ -55,5 +55,5 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-} */
+}
 

@@ -1,30 +1,28 @@
 import React, { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import api from '../services/api';
-import Spinner from './Spinner';
 
-// function Spinner() {
-//   return <span className="spinner" aria-label="Loading"></span>;
-// }
+function Spinner() {
+  return <span className="spinner" aria-label="Loading"></span>;
+}
 
-// function BigLoader() {
-//   return (
-//     <div style={{
-//       textAlign: 'center',
-//       padding: '20px',
-//       fontWeight: 'bold',
-//       color: '#555'
-//     }}>
-//       Loading response...
-//     </div>
-//   );
-// }
+function BigLoader() {
+  return (
+    <div style={{
+      textAlign: 'center',
+      padding: '20px',
+      fontWeight: 'bold',
+      color: '#555'
+    }}>
+      Loading response...
+    </div>
+  );
+}
 
 export default function ChatWindow({ pdfId, viewerRef }) {
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -41,13 +39,11 @@ export default function ChatWindow({ pdfId, viewerRef }) {
 
     try {
       setLoading(true);
-      setError(null)
-      const res = await api.askQuestion(question, pdfId,);
+      const res = await api.askQuestion( question,pdfId,);
       setMessages(res.data.history);
       setQuestion('');
     } catch (err) {
       console.error('Failed to get answer:', err);
-      setError('Failed to get answer from the server. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -55,13 +51,13 @@ export default function ChatWindow({ pdfId, viewerRef }) {
 
   // ... formatAnswer same as before ...
 
-  const formatAnswer = (text) => {
+   const formatAnswer = (text) => {
     if (!text) return null;
 
     const cleanedText = text
-      .split('\n')
-      .filter(line => !(line.trim() === '' || line.match(/^\d+\.$/)))
-      .join('\n');
+    .split('\n')
+    .filter(line => !(line.trim() === '' || line.match(/^\d+\.$/)))
+    .join('\n');
 
     const parts = cleanedText.split(/(\(p\.\d+\))/g); // split and keep citations
     return parts.map((part, idx) => {
@@ -88,9 +84,12 @@ export default function ChatWindow({ pdfId, viewerRef }) {
       className="d-flex flex-column bg-light"
       style={{ height: '500px', borderRadius: '8px', border: '1px solid #ccc' }}
     >
-      <div className="flex-grow-1 p-3 overflow-auto" style={{ borderBottom: '1px solid #ddd' }}>
+      <div
+        className="flex-grow-1 p-3 overflow-auto"
+        style={{ borderBottom: '1px solid #ddd' }}
+      >
         {loading ? (
-          <Spinner />
+          <BigLoader />
         ) : (
           messages.map((msg, idx) => (
             <div key={idx} className="mb-3">
@@ -101,13 +100,6 @@ export default function ChatWindow({ pdfId, viewerRef }) {
         )}
         <div ref={messagesEndRef} />
       </div>
-
-      {error && (
-        <div className="alert alert-danger" role="alert">
-          {error}
-        </div>
-      )}
-
 
       <div className="p-3 bg-white">
         <div className="input-group">
